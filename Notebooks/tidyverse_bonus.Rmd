@@ -1,0 +1,130 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+```
+
+
+
+1. Read in `districts.csv` into a tibble named `districts`.
+
+```{r}
+districts <- read_csv("../data/districts.csv")
+```
+
+```{r}
+districts
+```
+
+2. Notice that the first row corresponds to the whole State of Tennessee. Remove this row and save the result back to `districts`.
+
+
+```{r}
+districts <- districts[-c(1), ]
+districts
+```
+
+3. How many districts have a proficiency rate of at least 80% for both alg_1 and eng_1?
+
+
+
+```{r}
+districts |> 
+  filter(alg_1>=80 & eng_1>=80 ) |> 
+  count(system_name) |> 
+  summarise(total_districts = n())
+```
+4. How many districts have a proviciency rate less than 50% for either alg_1 or eng_1?
+
+
+```{r}
+districts |> 
+  filter(alg_1<50 | eng_1<50) |> 
+  count(system_name) |> 
+  summarise(total_districts = n())
+```
+
+
+5. Which district has the lowest graduation rate?
+
+
+```{r}
+districts |>
+  select(system_name, grad) |> 
+  arrange(grad) |> 
+  slice_head(n=1)
+```
+6. Within the Mid Cumberland region, which district has the highest ACT composite?
+
+
+```{r}
+districts |> 
+  filter(region == c('Mid Cumberland')) |>
+  select(system_name, act_composite) |> 
+  arrange(desc(act_composite)) |> 
+  slice_head(n=1)
+  
+
+```
+7. Create a scatter plot to compare alg_1 proficiency rates to alg_2 rates. What do you notice? Facet this plot by region. Does anything stand out when you facet the plots?
+
+
+```{r}
+ggplot(districts, aes(x=alg_1, y=alg_2)) +
+  geom_point() +
+  facet_wrap(~region)
+```
+
+Interpretation. There is a strong, positive correlation between higher grades in algebra 1 and algebra 2. If you score higher algebra 1, its postively associated with scoring higher in algebra 2 which makes sense. Some regions have stronger correlation between the two variables than others. Upper Cumberland appears to have no association. 
+
+
+
+
+```{r}
+districts
+```
+
+8. When creating this bar chart you may have noticed that some districts have missing enrollment values. For how many districts is this the case?
+
+
+```{r}
+districts |> 
+ select(system_name, enrollment) |> 
+ subset(is.na(enrollment)) |> 
+ summarise(total_count = n())
+ 
+
+```
+9. A lot of rows are missing additional values. Which district has the largest number of missing values (across all variables)? Hint: you might want to look at rowwise and c_across to answer this question.
+
+
+```{r}
+districts <- districts |> 
+  rowwise() |> # this is a group_by() function by row.
+  mutate(count_na = sum(is.na(cur_data())))
+  
+```
+
+```{r}
+districts |> 
+  select(count_na, system_name) |> 
+  arrange(desc(count_na)) |> 
+  head(1)
+```
+10. What is the mean graduation rate across all districts? What might be wrong with using just the regular mean to assess average graduation rates?
+
+
+```{r}
+districts |> 
+  group_by(grad)
+  summary(districts$grad)
+```
+
+```{r}
+
+```
+
+
